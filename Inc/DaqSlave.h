@@ -2,12 +2,6 @@
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_conf.h"
 #include "stm32f1xx_it.h"
-#include "usart.h"
-#include "adc.h"
-#include "can.h"
-#include "i2c.h"
-#include "spi.h"
-#include "gpio.h"
 
 
 
@@ -46,18 +40,21 @@
 #define OSC_TRIM_VALUE 0xF7
 
 
-extern float read_max6675(SPI_HandleTypeDef *hspi, uint8_t cs_port, uint8_t cs_pin);
+//extern float read_max6675(SPI_HandleTypeDef *hspi, uint8_t cs_port, uint8_t cs_pin);
 int32_t map_valor_Hx (uint32_t convert,uint32_t OFFSET);
-uint32_t ReadCount_1();
-uint32_t ReadCount_2();
-uint32_t ReadCount_3();
+uint32_t ReadCount(GPIO_TypeDef *HxCLOCK, uint16_t HxCLOCK_Pin, GPIO_TypeDef *DOUT, uint16_t DOUT_Pin);
 bool checkConfig(void);
+void MLX_config(void);
+void MLX_loopread(void);
 void lerEEPROM(void);
 void writeTrimmingValue(void);
 void setConfiguration(void);
 uint16_t Pot_map(uint32_t leitura_Pot);
+void CAN_Transmit(uint8_t *vet, uint32_t id);
 void transmit_dados(void);
 int16_t readConfig(void);
 void readPTAT(void);
 void readCPIX(void);
 void readIR(void);
+uint16_t ADC_read(ADC_HandleTypeDef* hadc, uint32_t Timeout);
+

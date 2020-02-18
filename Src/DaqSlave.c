@@ -1,4 +1,13 @@
 #include "DaqSlave.h"
+#define DEBUG 1
+
+CAN_HandleTypeDef hcan;
+CAN_FilterTypeDef sFilterConfig;
+CAN_TxHeaderTypeDef TxHeader;
+CAN_RxHeaderTypeDef RxHeader;
+uint8_t TxData[8];
+uint8_t RxData[8];
+uint32_t TxMailbox;
 
 const uint8_t refreshRate=8;
 int16_t irData[64];
@@ -52,7 +61,8 @@ uint16_t Pot;
 uint32_t ext1 = 1;
 uint16_t temp = 1;
 
-extern float read_max6675(SPI_HandleTypeDef *hspi, uint8_t cs_port, uint8_t cs_pin)
+
+/*extern float read_max6675(SPI_HandleTypeDef *hspi, uint8_t cs_port, uint8_t cs_pin)
 {
     uint8_t data[2]; //create and initialize data container
     data[0] = 0;
@@ -81,7 +91,7 @@ extern float read_max6675(SPI_HandleTypeDef *hspi, uint8_t cs_port, uint8_t cs_p
     float temp_aux = (float)(temp_raw * 0.25);
 
     return temp_aux;
-}
+}*/
 
 int32_t map_valor_Hx(uint32_t convert, uint32_t OFFSET)
 {
@@ -89,81 +99,32 @@ int32_t map_valor_Hx(uint32_t convert, uint32_t OFFSET)
     return dif1;
 }
 
-uint32_t ReadCount_1()
+uint32_t ReadCount(GPIO_TypeDef *HxCLOCK, uint16_t HxCLOCK_Pin, GPIO_TypeDef *DOUT, uint16_t DOUT_Pin)
  {
+
 
     uint32_t Count_1=0;
 	unsigned char i;
 
 
-    HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-    while(HAL_GPIO_ReadPin(DOUT0_GPIO_Port,DOUT0_Pin));
+    HAL_GPIO_WritePin(HxCLOCK,HxCLOCK_Pin, GPIO_PIN_RESET);
+    while(HAL_GPIO_ReadPin(DOUT,DOUT_Pin));
 
     for(i=0;i<24;i++)
     {
-	   HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_SET);
+	   HAL_GPIO_WritePin(HxCLOCK, HxCLOCK_Pin, GPIO_PIN_SET);
        Count_1 = Count_1 << 1;
-       HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-       if(HAL_GPIO_ReadPin(DOUT0_GPIO_Port,DOUT0_Pin)) Count_1++;
+       HAL_GPIO_WritePin(HxCLOCK,HxCLOCK_Pin, GPIO_PIN_RESET);
+       if(HAL_GPIO_ReadPin(DOUT,DOUT_Pin)) Count_1++;
 
      }
 
-     HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_SET);
+     HAL_GPIO_WritePin(HxCLOCK,HxCLOCK_Pin, GPIO_PIN_SET);
      Count_1 = Count_1^0x0800000;
-     HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
+     HAL_GPIO_WritePin(HxCLOCK,HxCLOCK_Pin, GPIO_PIN_RESET);
+     UART_print("%d\n", Count_1);
      return(Count_1);
 
-  }
-
-uint32_t ReadCount_2()
- {
-
-    uint32_t Count_2=0;
-    unsigned char i;
-
-    HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-
-    while(HAL_GPIO_ReadPin(DOUT1_GPIO_Port,DOUT1_Pin));
-
-
-    for(i=0;i<24;i++)
-    {
-	   HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_SET);
-       Count_2 = Count_2 << 1;
-       HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-       if(HAL_GPIO_ReadPin(DOUT1_GPIO_Port,DOUT1_Pin)) Count_2++;
-
-     }
-
-     HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_SET);
-     Count_2 = Count_2^0x0800000;
-     HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-     return(Count_2);
- }
-
-uint32_t ReadCount_3()
- {
-
-    uint32_t Count_3=0;
-    unsigned char i;
-
-    HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-
-    while(HAL_GPIO_ReadPin(DOUT2_GPIO_Port,DOUT2_Pin));
-
-    for(i=0;i<24;i++)
-    {
-	   HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_SET);
-	   Count_3 = Count_3 << 1;
-	   HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-	   if(HAL_GPIO_ReadPin(DOUT2_GPIO_Port,DOUT2_Pin)) Count_3++;
-
-	 } //end for
-
-	 HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_SET);
-	 Count_3 = Count_3^0x0800000;
-	 HAL_GPIO_WritePin(HxSCK_GPIO_Port,HxSCK_Pin, GPIO_PIN_RESET);
-	 return(Count_3);
   }
 
 
@@ -174,7 +135,18 @@ uint16_t Pot_map(uint32_t leituraPot)
     //leituraPot = (uint16_t)Pot;
     return leituraPot;
 }
+void CAN_Transmit(uint8_t *vet, uint32_t id){
+	TxHeader.StdId = id;
 
+
+#if DEBUG
+	if(HAL_CAN_AddTxMessage(&hcan, &TxHeader, vet, &TxMailbox) == HAL_OK) HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+#else
+	HAL_CAN_AddTxMessage(&hcan, &TxHeader, vet, &TxMailbox);
+
+#endif
+
+}
 void transmit_dados()
 {
 
@@ -189,29 +161,29 @@ void transmit_dados()
     vetTx[6] = IRcan0;
     vetTx[7] = IRcan0 >> 8;
     CAN_Transmit(vetTx, 170);
-    HAL_Delay(7);
 
-    vetTy[0] = Dado_1;
-    vetTy[1] = Dado_1 >> 8;
-    vetTy[2] = Dado_1 >> 16;
-    vetTy[3] = Dado_1 >> 24;
+
+    vetTy[0] = ext1;
+    vetTy[1] = ext1 >> 8;
+    vetTy[2] = ext1 >> 16;
+    vetTy[3] = ext1 >> 24;
     vetTy[4] = Dado_3;
     vetTy[5] = Dado_3 >> 8;
     vetTy[6] = Dado_3 >> 16;
     vetTy[7] = Dado_3 >> 24;
     CAN_Transmit(vetTy, 171);
-    HAL_Delay(7);
 
-    vetTv[0] = IRcan1;
-    vetTv[1] = IRcan1 >> 8;
-    vetTv[2] = IRcan2;
-    vetTv[3] = IRcan2 >> 8;
-    vetTv[4] = IRcan3;
-    vetTv[5] = IRcan3 >> 8;
-    vetTv[6] = IRcan4;
-    vetTv[7] = IRcan4 >> 8;
+
+    vetTv[0] = IRmedia[0];
+    vetTv[1] = IRmedia[0] >> 8;
+    vetTv[2] = IRmedia[1];
+    vetTv[3] = IRmedia[1] >> 8;
+    vetTv[4] = IRmedia[2];
+    vetTv[5] = IRmedia[2]>> 8;
+    vetTv[6] = IRmedia[3];
+    vetTv[7] = IRmedia[3]>> 8;
     CAN_Transmit(vetTv, 156);
-    HAL_Delay(7);
+
 
     vetTn[0] = IRcan5;
     vetTn[1] = IRcan5 >> 8;
@@ -222,7 +194,7 @@ void transmit_dados()
     vetTn[6] = IRcan8;
     vetTn[7] = IRcan8 >> 8;
     CAN_Transmit(vetTn, 157);
-    HAL_Delay(7);
+
 
     vetTu[0] = IRcan9;
     vetTu[1] = IRcan9 >> 8;
@@ -233,7 +205,7 @@ void transmit_dados()
     vetTu[6] = IRcan12;
     vetTu[7] = IRcan12 >> 8;
     CAN_Transmit(vetTu, 158);
-    HAL_Delay(7);
+
 
     vetTm[0] = IRcan13;
     vetTm[1] = IRcan13 >> 8;
@@ -244,7 +216,6 @@ void transmit_dados()
     vetTm[6] = 0;
     vetTm[7] = 0;
     CAN_Transmit(vetTm, 159);
-    HAL_Delay(7);
 
 
 
@@ -252,11 +223,6 @@ void transmit_dados()
 
 }
 
-bool checkConfig(void)
-{
-	bool check = !((readConfig() & 0x0400) >> 10);
-	return check;
-}
 
 int16_t readConfig(void)
 {
@@ -268,6 +234,13 @@ int16_t readConfig(void)
 	configuration = ((int16_t)(configHigh << 8) | configLow);
 	return configuration;
 }
+
+bool checkConfig(void)
+{
+	bool check = !((readConfig() & 0x0400) >> 10);
+	return check;
+}
+
 
 void lerEEPROM(void)
 {
@@ -364,7 +337,7 @@ void readCPIX(void)
 
 void readIR(void)
 {
-	memset(IRmedia, 0, 16);
+	memset(IRmedia,0,16);
 	volatile int i;
 	uint32_t comando = 0x02000140;
 	while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)(0x60<<1), comando, I2C_MEMADD_SIZE_32BIT, buffer, 128, 1000) != HAL_OK);
@@ -382,4 +355,36 @@ void readIR(void)
  	}
  	UART_print("\n");
 }
+
+void MLX_config(void){
+	  lerEEPROM();
+	  writeTrimmingValue();
+	  setConfiguration();
+}
+
+uint8_t contmlx = 0;
+void MLX_loopread(void){
+	  if(contmlx == 16){
+		  if (checkConfig())
+		  {
+			  MLX_config();
+		  }
+		  contmlx = 0;
+	  }
+	  contmlx++;
+	//readPTAT();
+	  readIR();
+}
+
+uint16_t leitura;
+uint16_t ADC_read(ADC_HandleTypeDef* hadc, uint32_t Timeout){
+
+	  HAL_ADC_Start(hadc);
+	  HAL_ADC_PollForConversion(hadc,Timeout);
+	  leitura = HAL_ADC_GetValue(hadc);
+	  UART_print("adc: %d\n", leitura);
+	  return leitura;
+
+}
+
 
