@@ -69,6 +69,10 @@ void Error_Handler(void);
 #define DOUT0_GPIO_Port GPIOB
 #define HxSCK_Pin GPIO_PIN_4
 #define HxSCK_GPIO_Port GPIOB
+#define DOUT1_Pin GPIO_PIN_6
+#define DOUT1_GPIO_Port GPIOB
+#define DOUT2_Pin GPIO_PIN_7
+#define DOUT2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

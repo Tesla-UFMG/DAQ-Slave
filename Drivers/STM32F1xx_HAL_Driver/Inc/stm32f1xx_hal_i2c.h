@@ -331,6 +331,10 @@ typedef  void (*pI2C_AddrCallbackTypeDef)(I2C_HandleTypeDef *hi2c, uint8_t Trans
 #define I2C_MEMADD_SIZE_16BIT           0x00000010U
 #define I2C_MEMADD_SIZE_24BIT 			(0x00000003U)
 #define I2C_MEMADD_SIZE_32BIT 			(0x00000004U)
+
+
+
+
 /**
   * @}
   */

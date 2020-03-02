@@ -58,6 +58,7 @@
 /* External variables --------------------------------------------------------*/
 extern CAN_HandleTypeDef hcan;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -226,24 +227,9 @@ void USB_LP_CAN1_RX0_IRQHandler(void)
   /* USER CODE END USB_LP_CAN1_RX0_IRQn 1 */
 }
 
-void TIM2_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM2_IRQn 0 */
-
-  /* USER CODE END TIM2_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim2);
- // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
- // HAL_Delay(50);
-  //leitura_PotInt = Pot_map(leitura_Pot);
-  //leitura_BetinaInt = leitura_Bet;
-  /* USER CODE BEGIN TIM2_IRQn 1 */
-
-  /* USER CODE END TIM2_IRQn 1 */
-}
 /**
   * @brief This function handles TIM2 global interrupt.
   */
-
 
 /* USER CODE BEGIN 1 */
 

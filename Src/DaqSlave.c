@@ -150,7 +150,7 @@ void CAN_Transmit(uint8_t *vet, uint32_t id){
 void transmit_dados()
 {
 
-
+	/*SLAVE 1*/
 
     vetTx[0] = leitura_BetinaInt;
     vetTx[1] = leitura_BetinaInt >> 8;
@@ -163,10 +163,10 @@ void transmit_dados()
     CAN_Transmit(vetTx, 170);
 
 
-    vetTy[0] = ext1;
-    vetTy[1] = ext1 >> 8;
-    vetTy[2] = ext1 >> 16;
-    vetTy[3] = ext1 >> 24;
+    vetTy[0] = Dado_1;
+    vetTy[1] = Dado_1 >> 8;
+    vetTy[2] = Dado_1 >> 16;
+    vetTy[3] = Dado_1 >> 24;
     vetTy[4] = Dado_3;
     vetTy[5] = Dado_3 >> 8;
     vetTy[6] = Dado_3 >> 16;
@@ -220,6 +220,18 @@ void transmit_dados()
 
 
 
+	/*SLAVE 3
+    vetTy[0] = Dado_1;
+    vetTy[1] = Dado_1 >> 8;
+    vetTy[2] = Dado_1 >> 16;
+    vetTy[3] = Dado_1 >> 24;
+    vetTy[4] = Dado_3;
+    vetTy[5] = Dado_3 >> 8;
+    vetTy[6] = Dado_3 >> 16;
+    vetTy[7] = Dado_3 >> 24;
+    CAN_Transmit(vetTy, 178);
+
+*/
 
 }
 
@@ -351,9 +363,9 @@ void readIR(void)
     {
  		IRmedia[aux1] = irData[aux1] + irData[(aux1)+16] + irData[(aux1)+32] + irData[(aux1)+48];
  		IRmedia[aux1] = IRmedia[aux1]/4;
- 		UART_print(" %d", IRmedia[aux1]);
+ 	//	UART_print(" %d", IRmedia[aux1]);
  	}
- 	UART_print("\n");
+ 	//UART_print("\n");
 }
 
 void MLX_config(void){

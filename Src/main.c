@@ -21,7 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DaqSlave.h"
@@ -43,13 +42,10 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-#define bool	_Bool
-#define true	1
-#define false	0
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 
-extern CAN_HandleTypeDef hcan;
+CAN_HandleTypeDef hcan;
 
 I2C_HandleTypeDef hi2c2;
 
@@ -57,8 +53,6 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
-
-
 
 /* USER CODE BEGIN PV */
 extern uint16_t leitura_PotInt;
@@ -175,10 +169,9 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
+  /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
   HAL_TIM_Base_Start_IT(&htim3);
-  /* USER CODE BEGIN 2 */
-
   /* USER CODE END 2 */
  
  
@@ -201,11 +194,12 @@ int main(void)
 
 	  /*EXTENSIOMETRIA*/
 
-	  //ext1 = ReadCount(HxSCK_GPIO_Port, HxSCK_Pin, DOUT0_GPIO_Port, DOUT0_Pin);
+	  ext1 = ReadCount(HxSCK_GPIO_Port, HxSCK_Pin, DOUT0_GPIO_Port, DOUT0_Pin);
+	  ext3 = ReadCount(HxSCK_GPIO_Port, HxSCK_Pin, DOUT2_GPIO_Port, DOUT2_Pin);
 	  /* CAN */
-	 transmit_dados();
-	 // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-	  //HAL_Delay(30);
+	  transmit_dados();
+	//  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	 // HAL_Delay(30);
 
 
 
@@ -610,11 +604,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : DOUT0_Pin */
-  GPIO_InitStruct.Pin = DOUT0_Pin;
+  /*Configure GPIO pins : DOUT0_Pin DOUT1_Pin DOUT2_Pin */
+  GPIO_InitStruct.Pin = DOUT0_Pin|DOUT1_Pin|DOUT2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(DOUT0_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : HxSCK_Pin */
   GPIO_InitStruct.Pin = HxSCK_Pin;
@@ -636,6 +630,19 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 //HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_2);
 }
 
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  leitura_PotInt = Pot_map(Pot);
+  leitura_BetinaInt = Senp;
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+
+  /* USER CODE END TIM2_IRQn 1 */
+}
+
 
 void TIM3_IRQHandler(void)
 {
@@ -645,8 +652,9 @@ void TIM3_IRQHandler(void)
   HAL_TIM_IRQHandler(&htim3);
 
   /* USER CODE BEGIN TIM3_IRQn 1 */
-  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+ // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
   Dado_1 = ext1;
+  Dado_3 = ext3;
   if(cont == 6){
   	IRcan0 = IRmedia[0];			//n botei o for de proposito
   	IRcan1 = IRmedia[1];
@@ -670,16 +678,6 @@ void TIM3_IRQHandler(void)
   cont++;
   /* USER CODE END TIM3_IRQn 1 */
 }
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-//	if(htim->Instance == TIM2) //Se a fonte for TIM2
-//	{
-		//HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-		//HAL_Delay(50);
-//	}
-
-}
-
 
 
 

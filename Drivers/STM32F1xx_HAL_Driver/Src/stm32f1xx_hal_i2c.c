@@ -2664,7 +2664,7 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead2(I2C_HandleTypeDef *hi2c, uint16_
           return HAL_TIMEOUT;
         }
       }
-      /* Send MSB2 of Memory Address */
+      /* Send MSB of Memory Address */
             hi2c->Instance->DR = ((uint8_t)((uint32_t)(((uint32_t)((MemAddress) & (uint32_t)(0x0000FF00U))) >> 8U)));
 
 
@@ -2707,7 +2707,7 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead2(I2C_HandleTypeDef *hi2c, uint16_
 	            return HAL_TIMEOUT;
 	          }
 	        }
-      /* Send MSB2 of Memory Address */
+      /* Send MSB of Memory Address */
       hi2c->Instance->DR = ((uint8_t)((uint32_t)(((uint32_t)((MemAddress) & (uint32_t)(0x00FF0000U))) >> 16U)));
 
 
@@ -2725,7 +2725,7 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead2(I2C_HandleTypeDef *hi2c, uint16_
           return HAL_TIMEOUT;
         }
       }
-      /* Send MSB3 of Memory Address */
+      /* Send MSB of Memory Address */
             hi2c->Instance->DR = ((uint8_t)((uint32_t)(((uint32_t)((MemAddress) & (uint32_t)(0x0000FF00U))) >> 8U)));
 
 
@@ -2748,6 +2748,11 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead2(I2C_HandleTypeDef *hi2c, uint16_
 
 
     }
+
+
+
+
+
 
 
 
@@ -3048,6 +3053,11 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read2(I2C_HandleTypeDef *hi2c, uint16_t DevAddress
     return HAL_BUSY;
   }
 }
+
+
+
+
+
 
 HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
@@ -7123,7 +7133,6 @@ static HAL_StatusTypeDef I2C_RequestMemoryRead(I2C_HandleTypeDef *hi2c, uint16_t
 
   return HAL_OK;
 }
-
 
 /**
   * @brief  DMA I2C process complete callback.
