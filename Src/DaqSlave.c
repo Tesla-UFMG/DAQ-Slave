@@ -1,5 +1,14 @@
 #include "DaqSlave.h"
-#define DEBUG 1
+#define DEBUG 0
+#define POTMAP 0
+#define BIT0 (1 << 0)
+#define BIT1 (1 << 1)
+#define BIT2 (1 << 2)
+#define BIT3 (1 << 3)
+#define BIT4 (1 << 4)
+#define BIT5 (1 << 5)
+#define BIT6 (1 << 6)
+
 
 CAN_HandleTypeDef hcan;
 CAN_FilterTypeDef sFilterConfig;
@@ -122,19 +131,14 @@ uint32_t ReadCount(GPIO_TypeDef *HxCLOCK, uint16_t HxCLOCK_Pin, GPIO_TypeDef *DO
      HAL_GPIO_WritePin(HxCLOCK,HxCLOCK_Pin, GPIO_PIN_SET);
      Count_1 = Count_1^0x0800000;
      HAL_GPIO_WritePin(HxCLOCK,HxCLOCK_Pin, GPIO_PIN_RESET);
-     UART_print("%d\n", Count_1);
+    // UART_print("%d\n", Count_1);
      return(Count_1);
 
   }
 
 
 
-uint16_t Pot_map(uint32_t leituraPot)
-{
-   // Pot = ((Pot) * (270) / (4095));
-    //leituraPot = (uint16_t)Pot;
-    return leituraPot;
-}
+
 void CAN_Transmit(uint8_t *vet, uint32_t id){
 	TxHeader.StdId = id;
 
@@ -221,6 +225,7 @@ void transmit_dados()
 
 
 	/*SLAVE 3
+
     vetTy[0] = Dado_1;
     vetTy[1] = Dado_1 >> 8;
     vetTy[2] = Dado_1 >> 16;
@@ -230,8 +235,8 @@ void transmit_dados()
     vetTy[6] = Dado_3 >> 16;
     vetTy[7] = Dado_3 >> 24;
     CAN_Transmit(vetTy, 178);
-
 */
+
 
 }
 
@@ -240,7 +245,7 @@ int16_t readConfig(void)
 {
 	uint8_t configLow = 0, configHigh = 0;
 	uint32_t comando = 0x02920001;
-	while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)0xC0, comando, I2C_MEMADD_SIZE_32BIT, buffer, 2, 1000) != HAL_OK);
+	//while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)0xC0, comando, I2C_MEMADD_SIZE_32BIT, buffer, 2, 1000) != HAL_OK);
 	configLow = buffer[0];
 	configHigh = buffer[1];
 	configuration = ((int16_t)(configHigh << 8) | configLow);
@@ -320,7 +325,7 @@ void readPTAT(void)
 {
 	uint8_t ptatLow=0,ptatHigh=0;
 	uint32_t comando = 0x02400001;
-	while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)0xC0, comando, I2C_MEMADD_SIZE_32BIT, buffer, 2, 1000) != HAL_OK);
+	//while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)0xC0, comando, I2C_MEMADD_SIZE_32BIT, buffer, 2, 1000) != HAL_OK);
 	ptatLow = buffer[0];
 	ptatHigh = buffer[1];
 	ptat = ((uint16_t) (ptatHigh << 8) | ptatLow);
@@ -352,7 +357,7 @@ void readIR(void)
 	memset(IRmedia,0,16);
 	volatile int i;
 	uint32_t comando = 0x02000140;
-	while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)(0x60<<1), comando, I2C_MEMADD_SIZE_32BIT, buffer, 128, 1000) != HAL_OK);
+	//while(HAL_I2C_Mem_Read2(&hi2c2, (uint16_t)(0x60<<1), comando, I2C_MEMADD_SIZE_32BIT, buffer, 128, 1000) != HAL_OK);
 	i = 0;
 	for(int k = 0; k < 64; k++)
     {
@@ -388,15 +393,96 @@ void MLX_loopread(void){
 	  readIR();
 }
 
+
+uint16_t map;
+
+int  writeSector(uint32_t Address,void * values, uint16_t size)
+{
+    uint16_t *AddressPtr;
+    uint16_t *valuePtr;
+    AddressPtr = (uint16_t *)Address;
+    valuePtr=(uint16_t *)values;
+    size = size / 2;  // incoming value is expressed in bytes, not 16 bit words
+    while(size) {
+        // unlock the flash
+        // Key 1 : 0x45670123
+        // Key 2 : 0xCDEF89AB
+        FLASH->KEYR = 0x45670123;
+        FLASH->KEYR = 0xCDEF89AB;
+        FLASH->CR &= ~BIT1; // ensure PER is low
+        FLASH->CR |= BIT0;  // set the PG bit
+        *(AddressPtr) = *(valuePtr);
+        while(FLASH->SR & BIT0); // wait while busy
+        if (FLASH->SR & BIT2)
+            return -1; // flash not erased to begin with
+        if (FLASH->SR & BIT4)
+            return -2; // write protect error
+        AddressPtr++;
+        valuePtr++;
+        size--;
+    }
+    return 0;
+}
+void eraseSector(uint32_t SectorStartAddress)
+{
+    FLASH->KEYR = 0x45670123;
+    FLASH->KEYR = 0xCDEF89AB;
+    FLASH->CR &= ~BIT0;  // Ensure PG bit is low
+    FLASH->CR |= BIT1; // set the PER bit
+    FLASH->AR = SectorStartAddress;
+    FLASH->CR |= BIT6; // set the start bit
+    while(FLASH->SR & BIT0); // wait while busy
+}
+void readSector(uint32_t SectorStartAddress, void * values, uint16_t size)
+{
+    uint16_t *AddressPtr;
+    uint16_t *valuePtr;
+    AddressPtr = (uint16_t *)SectorStartAddress;
+    valuePtr=(uint16_t *)values;
+    size = size/2; // incoming value is expressed in bytes, not 16 bit words
+    while(size)
+    {
+        *((uint16_t *)valuePtr)=*((uint16_t *)AddressPtr);
+        valuePtr++;
+        AddressPtr++;
+        size--;
+    }
+}
+
 uint16_t leitura;
 uint16_t ADC_read(ADC_HandleTypeDef* hadc, uint32_t Timeout){
-
+#if POTMAP
+	 uint16_t limites[2];
+	 for(int i; i < 50; i++){
+		 HAL_ADC_Start(hadc);
+		 HAL_ADC_PollForConversion(hadc,Timeout);
+		 leitura = HAL_ADC_GetValue(hadc);
+		 UART_print("%d\n", leitura);
+		 HAL_Delay(100);
+	 //}
+	 return 0;
+	/*HAL_ADC_Start(hadc);
+	 HAL_ADC_PollForConversion(hadc,Timeout);
+	 limites[0] = HAL_ADC_GetValue(hadc); //primeiro limite
+	 HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	 HAL_Delay(500);
+	 HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	 HAL_Delay(500);
+	 HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	 HAL_Delay(3000);
+	 HAL_ADC_Start(hadc);
+	 HAL_ADC_PollForConversion(hadc,Timeout);
+	 limites[1] = HAL_ADC_GetValue(hadc); //segundo limite*/
+   // eraseSector(0x800fc00);
+   // writeSector(0x800fc00,values,sizeof(values));
+   // readSector(0x800fc00,valores,sizeof(valores));
+	//HAL_Delay(10000);
+	 }
+#else
 	  HAL_ADC_Start(hadc);
 	  HAL_ADC_PollForConversion(hadc,Timeout);
 	  leitura = HAL_ADC_GetValue(hadc);
-	  UART_print("adc: %d\n", leitura);
+	 // UART_print("%d\n", leitura);
 	  return leitura;
-
+#endif
 }
-
-

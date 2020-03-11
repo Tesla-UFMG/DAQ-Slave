@@ -172,6 +172,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
   HAL_TIM_Base_Start_IT(&htim3);
+
   /* USER CODE END 2 */
  
  
@@ -179,27 +180,29 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_Delay(5);
-  MLX_config();
+  //MLX_config();
   uint8_t contmlx = 0;
+  uint32_t tempo = 0;
+  uint32_t tempodepois = 0;
   while (1)
   {
-
+	  tempo = HAL_GetTick();
 	  /*MELEXIS*/
-	  MLX_loopread();
+	 // MLX_loopread();
 
 	  /*POTENCIOMETRO E SENSOR DE PRESSÃO*/
 
-	  Senp = ADC_read(&hadc1,ADC_CHANNEL_4);
+	 // Senp = ADC_read(&hadc1,ADC_CHANNEL_4);
 	  Pot = ADC_read(&hadc2,ADC_CHANNEL_9);
 
 	  /*EXTENSIOMETRIA*/
 
-	  ext1 = ReadCount(HxSCK_GPIO_Port, HxSCK_Pin, DOUT0_GPIO_Port, DOUT0_Pin);
+	 // ext1 = ReadCount(HxSCK_GPIO_Port, HxSCK_Pin, DOUT0_GPIO_Port, DOUT0_Pin);
 	  ext3 = ReadCount(HxSCK_GPIO_Port, HxSCK_Pin, DOUT2_GPIO_Port, DOUT2_Pin);
 	  /* CAN */
 	  transmit_dados();
-	//  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-	 // HAL_Delay(30);
+	 // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	//  HAL_Delay(30);
 
 
 
@@ -207,6 +210,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  tempodepois = HAL_GetTick();
+	  UART_print("%d\n", (tempodepois - tempo));
   }
   /* USER CODE END 3 */
 }
@@ -334,7 +339,7 @@ static void MX_ADC2_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_9;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -636,7 +641,7 @@ void TIM2_IRQHandler(void)
 
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
-  leitura_PotInt = Pot_map(Pot);
+ // leitura_PotInt = Pot_map(Pot);
   leitura_BetinaInt = Senp;
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
@@ -653,7 +658,7 @@ void TIM3_IRQHandler(void)
 
   /* USER CODE BEGIN TIM3_IRQn 1 */
  // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  Dado_1 = ext1;
+  Dado_2 = ext2;
   Dado_3 = ext3;
   if(cont == 6){
   	IRcan0 = IRmedia[0];			//n botei o for de proposito
