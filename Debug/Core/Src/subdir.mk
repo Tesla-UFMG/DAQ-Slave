@@ -5,8 +5,10 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Core/Src/Initializers.c \
 ../Core/Src/adc.c \
-../Core/Src/fdcan.c \
+../Core/Src/can_hendler.c \
+../Core/Src/general_can.c \
 ../Core/Src/gpio.c \
 ../Core/Src/i2c.c \
 ../Core/Src/main.c \
@@ -18,8 +20,10 @@ C_SRCS += \
 ../Core/Src/usart.c 
 
 OBJS += \
+./Core/Src/Initializers.o \
 ./Core/Src/adc.o \
-./Core/Src/fdcan.o \
+./Core/Src/can_hendler.o \
+./Core/Src/general_can.o \
 ./Core/Src/gpio.o \
 ./Core/Src/i2c.o \
 ./Core/Src/main.o \
@@ -31,8 +35,10 @@ OBJS += \
 ./Core/Src/usart.o 
 
 C_DEPS += \
+./Core/Src/Initializers.d \
 ./Core/Src/adc.d \
-./Core/Src/fdcan.d \
+./Core/Src/can_hendler.d \
+./Core/Src/general_can.d \
 ./Core/Src/gpio.d \
 ./Core/Src/i2c.d \
 ./Core/Src/main.d \

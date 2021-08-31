@@ -1,0 +1,4 @@
+adc.c:31:6:ADC_Select_CH4	40	static
+adc.c:47:6:ADC_Select_CH15	40	static
+adc.c:68:6:MX_ADC1_Init	24	static
+adc.c:120:6:MX_ADC2_Init	40	static
