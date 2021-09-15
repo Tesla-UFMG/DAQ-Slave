@@ -3,11 +3,12 @@
  * CAN_handler.c
  */
 
-#include "CAN_handler.h"
+#include "can_handler.h"
+
 
 
 //função para inicializar a CAN
-void initialize_CAN(FDCAN_HandleTypeDef* hfdcan, void (* CAN_receive_callback)(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifo0ITs), FDCAN_TxHeaderTypeDef* TxHeader) {
+void initialize_CAN(FDCAN_HandleTypeDef* hfdcan, void (*CAN_receive_callback)(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifoITs), FDCAN_TxHeaderTypeDef* TxHeader) {
 
 	if (HAL_FDCAN_RegisterRxFifo0Callback(hfdcan, CAN_receive_callback) != HAL_OK) { //função para registrar a função de callback
 		/* Callback Register Error */
@@ -33,4 +34,13 @@ void initialize_CAN(FDCAN_HandleTypeDef* hfdcan, void (* CAN_receive_callback)(F
 	TxHeader->FDFormat = FDCAN_CLASSIC_CAN;
 	TxHeader->TxEventFifoControl = FDCAN_NO_TX_EVENTS;
 	TxHeader->MessageMarker = 0;
+}
+
+//função que realiza a transmissão da mensagem
+void can_transmit(FDCAN_HandleTypeDef* hfdcan, FDCAN_TxHeaderTypeDef* TxHeader, uint32_t id, uint16_t* data) {
+	TxHeader->Identifier = id;
+	if (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, TxHeader, (uint8_t*)data) != HAL_OK) {
+		//deu ruim
+		//TODO: tratar quando falhar envio de mensagem de can ao inversor
+	}
 }

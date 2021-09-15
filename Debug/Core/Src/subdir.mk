@@ -7,7 +7,7 @@
 C_SRCS += \
 ../Core/Src/Initializers.c \
 ../Core/Src/adc.c \
-../Core/Src/can_hendler.c \
+../Core/Src/can_handler.c \
 ../Core/Src/general_can.c \
 ../Core/Src/gpio.c \
 ../Core/Src/i2c.c \
@@ -22,7 +22,7 @@ C_SRCS += \
 OBJS += \
 ./Core/Src/Initializers.o \
 ./Core/Src/adc.o \
-./Core/Src/can_hendler.o \
+./Core/Src/can_handler.o \
 ./Core/Src/general_can.o \
 ./Core/Src/gpio.o \
 ./Core/Src/i2c.o \
@@ -37,7 +37,7 @@ OBJS += \
 C_DEPS += \
 ./Core/Src/Initializers.d \
 ./Core/Src/adc.d \
-./Core/Src/can_hendler.d \
+./Core/Src/can_handler.d \
 ./Core/Src/general_can.d \
 ./Core/Src/gpio.d \
 ./Core/Src/i2c.d \

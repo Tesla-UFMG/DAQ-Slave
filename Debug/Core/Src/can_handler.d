@@ -1,5 +1,5 @@
-Core/Src/can_hendler.o: ../Core/Src/can_hendler.c \
- ../Core/Inc/CAN_handler.h \
+Core/Src/can_handler.o: ../Core/Src/can_handler.c \
+ ../Core/Inc/can_handler.h \
  ../Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h \
  ../Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h743xx.h \
  ../Drivers/CMSIS/Include/core_cm7.h \
@@ -35,7 +35,7 @@ Core/Src/can_hendler.o: ../Core/Src/can_hendler.c \
  ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h \
  ../Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h
 
-../Core/Inc/CAN_handler.h:
+../Core/Inc/can_handler.h:
 
 ../Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h:
 
